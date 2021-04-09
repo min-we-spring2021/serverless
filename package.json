@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "aws": "0.0.3-2",
     "aws-lambda-ric": "^1.0.0"
   },
   "devDependencies": {},
