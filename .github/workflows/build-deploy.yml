@@ -22,7 +22,7 @@ jobs:
         run: |
           cd ..
           mkdir codedeploy_artifact
-          zip -r ${{ env.ARTIFACT_NAME }} serverless/*
+          zip -r ${{ env.ARTIFACT_NAME }} index.js
           pwd
           ls -al 
           mv ${{ env.ARTIFACT_NAME }} codedeploy_artifact/
