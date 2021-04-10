@@ -47,7 +47,7 @@ jobs:
           cd ..
           ls -al
           pwd
-          aws s3 sync ./codedeploy_artifact s3://codedeploy.wenhao.min.prod
+          aws s3 sync ./codedeploy_artifact s3://${{ secrets.S3_CODEDEPLY_BUCKET }}
 
       - name: codedeploy api call
         run: |
