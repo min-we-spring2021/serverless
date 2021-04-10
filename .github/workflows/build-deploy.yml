@@ -51,16 +51,11 @@ jobs:
 
       - name: codedeploy api call
         run: |
-          output=$(aws deploy create-deployment \
-            --function-name lambda_func \
+          output=$(aws lambda update-function-code \
+                       --function-name lambda_func \
                        --s3-bucket ${{ secrets.S3_CODEDEPLY_BUCKET }} \
                        --s3-key ${{ env.ARTIFACT_NAME }} \
                        --output json)
-
-            echo $output
-            
-            dId=$(echo $output | jq -r '.deploymentId')
-
-            aws deploy wait deployment-successful --deployment-id $dId
+          echo $output
 
  
