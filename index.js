@@ -1,6 +1,8 @@
 var aws = require("aws-sdk");
 var ses = new aws.SES({ region: "us-east-1" });
-exports.handler = async function (event) {
+
+const ddb = new aws.DynamoDB({ params: { TableName: "dynamodb6225" } });
+exports.handler = function (event) {
     const message = event.Records[0].Sns.Message;
     const mes = JSON.parse(message);
     if (mes.type === "create") {
@@ -17,7 +19,30 @@ exports.handler = async function (event) {
             },
             Source: "no-replay@prod.wenhaom.me",
         }
-        return ses.sendEmail(params).promise()
+        const itemParams = {
+            Item: {
+                'id': { S: mes.BookID }
+            }
+        };
+        const itemFind = {
+            Key: {
+                'id': { S: mes.BookID }
+            }
+        };
+        ddb.getItem(itemFind, function (err, data) {
+            if (err || data.Item == undefined) {
+                ddb.putItem(itemParams, function (err, data) {
+                    if (err) {
+                        console.log("Error", err);
+                    } else {
+                        return ses.sendEmail(params).promise()
+                    }
+                });
+            } else {
+                console.log("you have send email before", data.Item);
+            }
+        });
+
     } else {
         const params = {
             Destination: {
@@ -31,6 +56,23 @@ exports.handler = async function (event) {
             },
             Source: "no-replay@prod.wenhaom.me",
         }
-        return ses.sendEmail(params).promise()
+        const itemFind = {
+            Key: {
+                'id': { S: mes.BookID }
+            }
+        };
+        ddb.getItem(itemFind, function (err, data) {
+            if (err || data.Item == undefined) {
+                console.log("you have delete email before", data.Item);
+            } else {
+                ddb.deleteItem(itemFind, function (err, data) {
+                    if (err) {
+                        console.log("Error", err);
+                    } else {
+                        return ses.sendEmail(params).promise()
+                    }
+                });
+            }
+        });
     }
 };
