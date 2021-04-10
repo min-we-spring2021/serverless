@@ -1,0 +1,62 @@
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Build & Deploy webapp
+
+env:
+  ARTIFACT_NAME: csye6225-serverless-${{ github.sha }}.zip
+  AWS_REGION: us-east-1
+on:
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  ci_cd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build deployment Artifact
+        run: |
+          cd ..
+          mkdir codedeploy_artifact
+          zip -r ${{ env.ARTIFACT_NAME }} serverless/*
+          pwd
+          ls -al 
+          mv ${{ env.ARTIFACT_NAME }} codedeploy_artifact/
+          pwd
+          ls -al 
+          cd codedeploy_artifact
+          pwd
+          ls -al
+          cd ..
+          pwd 
+          ls -al
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Copy files to S3
+        run: |
+          cd ..
+          pwd
+          ls -al
+          aws s3 sync ./codedeploy_artifact s3://${{ secrets.S3_CODEDEPLOY_BUCKET }}
+
+      - name: codedeploy api call
+        run: |
+          output=$(aws deploy create-deployment \
+            --function-name lambda_func \
+                       --s3-bucket ${{ secrets.S3_CODEDEPLY_BUCKET }} \
+                       --s3-key ${{ env.ARTIFACT_NAME }} \
+                       --output json)
+
+            echo $output
+
+ 
